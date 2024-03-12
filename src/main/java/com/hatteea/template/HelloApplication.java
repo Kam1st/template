@@ -2,81 +2,67 @@ package com.hatteea.template;
 
 import javafx.application.Application;
 import javafx.geometry.Insets;
-import javafx.geometry.Pos;
 import javafx.scene.Scene;
+import javafx.scene.chart.BarChart;
+import javafx.scene.chart.CategoryAxis;
+import javafx.scene.chart.NumberAxis;
 import javafx.scene.control.*;
-import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 
+import java.util.Arrays;
+
 public class HelloApplication extends Application {
+    private SortTemplate sortTemplate;
+    private TextField inputField;
+
+    private Label label;
 
     @Override
     public void start(Stage primaryStage) {
-        primaryStage.setTitle("Sorting Algorithm Visualizer");
 
-        VBox root = new VBox(10);
+        VBox root = new VBox();
         root.setPadding(new Insets(10));
-        root.setAlignment(Pos.CENTER_LEFT);
+        root.setSpacing(10);
 
-        ComboBox<String> algorithmComboBox = new ComboBox<>();
-        algorithmComboBox.getItems().addAll("Quick Sort", "Merge Sort");
-        algorithmComboBox.setValue("Quick Sort");
+        label = new Label("Entrez les nombres à trier");
+        inputField = new TextField();
+        inputField.setPromptText("Entrez les nombres à trier");
 
-        Slider speedSlider = new Slider(1, 10, 5);
-        speedSlider.setShowTickLabels(true);
-        speedSlider.setShowTickMarks(true);
-        speedSlider.setMajorTickUnit(1);
-        speedSlider.setBlockIncrement(1);
 
-        TextField arrayInput = new TextField();
-        arrayInput.setPromptText("Enter numbers separated by commas");
+        ToggleGroup algorithmGroup = new ToggleGroup();
+        RadioButton quickSortButton = new RadioButton("Quick Sort");
+        quickSortButton.setToggleGroup(algorithmGroup);
+        quickSortButton.setSelected(true);
+        RadioButton mergeSortButton = new RadioButton("Merge Sort");
+        mergeSortButton.setToggleGroup(algorithmGroup);
 
-        Button startButton = new Button("Start Sorting");
-        startButton.setOnAction(e -> {
-            String[] arrayStrings = arrayInput.getText().split(",");
-            Integer[] array = new Integer[arrayStrings.length];
-            for (int i = 0; i < arrayStrings.length; i++) {
-                array[i] = Integer.parseInt(arrayStrings[i].trim());
-            }
+        CategoryAxis xAxis = new CategoryAxis();
+        NumberAxis yAxis = new NumberAxis();
+        BarChart<String, Number> barChart = new BarChart<>(xAxis, yAxis);
 
-            SortTemplate sortingAlgorithm;
-            String selectedAlgorithm = algorithmComboBox.getValue();
-            if (selectedAlgorithm.equals("Quick Sort")) {
-                sortingAlgorithm = new QuickSort();
-            } else if (selectedAlgorithm.equals("Merge Sort")) {
-                sortingAlgorithm = new MergeSort();
+        Button startButton = new Button("Commencer");
+
+        startButton.setOnAction(event -> {
+            String input = inputField.getText();
+            int[] array = Arrays.stream(input.split(" "))
+                    .mapToInt(Integer::parseInt)
+                    .toArray();
+
+            if (quickSortButton.isSelected()) {
+                sortTemplate = new QuickSort(array, barChart);
             } else {
-                // Default to Quick Sort
-                sortingAlgorithm = new QuickSort();
+                sortTemplate = new MergeSort(array, barChart);
             }
 
-            sortingAlgorithm.sortAndDisplay(array);
-
-            SortingStepsView sortingStepsView = new SortingStepsView();
-            sortingStepsView.setArray(array);
-
-            SortingStepsApplication sortingStepsApp = new SortingStepsApplication();
-            sortingStepsApp.setSortingStepsView(sortingStepsView);
-            sortingStepsApp.start(new Stage());
+            sortTemplate.sort();
         });
 
-        HBox hbox = new HBox(10);
-        hbox.setAlignment(Pos.CENTER_RIGHT);
-        hbox.getChildren().addAll(startButton);
+        root.getChildren().addAll(label, inputField, quickSortButton, mergeSortButton, startButton, barChart);
 
-        root.getChildren().addAll(
-                new Label("Select Algorithm:"),
-                algorithmComboBox,
-                new Label("Enter Array (comma-separated):"),
-                arrayInput,
-                new Label("Select Speed:"),
-                speedSlider,
-                hbox
-        );
-
-        Scene scene = new Scene(root, 400, 300);
+        Scene scene = new Scene(root, 800, 600);
         primaryStage.setScene(scene);
+        primaryStage.setTitle("Tri de nombres");
         primaryStage.show();
     }
 

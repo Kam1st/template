@@ -1,68 +1,81 @@
 package com.hatteea.template;
 
-import javafx.animation.KeyFrame;
-import javafx.animation.Timeline;
+import javafx.scene.chart.BarChart;
 import javafx.scene.chart.XYChart;
-import javafx.util.Duration;
 
-import java.util.Arrays;
 
 public class MergeSort extends SortTemplate {
-    @Override
-    public void sort(Integer[] array, Timeline timeline, XYChart.Series<String, Number> series) {
-        mergeSort(array, 0, array.length - 1, timeline, series);
+
+    public MergeSort(int[] array, BarChart<String, Number> barChart) {
+        super(array, barChart);
     }
 
-    private void mergeSort(Integer[] array, int l, int r, Timeline timeline, XYChart.Series<String, Number> series) {
+    @Override
+    public void sort() {
+        mergeSort(array, 0, array.length - 1);
+    }
+
+    private void mergeSort(int[] arr, int l, int r) {
         if (l < r) {
             int m = (l + r) / 2;
-            mergeSort(array, l, m, timeline, series);
-            mergeSort(array, m + 1, r, timeline, series);
-            merge(array, l, m, r, timeline, series);
+            mergeSort(arr, l, m);
+            mergeSort(arr, m + 1, r);
+            merge(arr, l, m, r);
         }
     }
 
-    private void merge(Integer[] array, int l, int m, int r, Timeline timeline, XYChart.Series<String, Number> series) {
+    private void merge(int[] arr, int l, int m, int r) {
         int n1 = m - l + 1;
         int n2 = r - m;
 
-        Integer[] L = Arrays.copyOfRange(array, l, m + 1);
-        Integer[] R = Arrays.copyOfRange(array, m + 1, r + 1);
+        int[] L = new int[n1];
+        int[] R = new int[n2];
 
-        int i = 0, j = 0, k = l;
+        System.arraycopy(arr, l, L, 0, n1);
+        System.arraycopy(arr, m + 1, R, 0, n2);
+
+        int i = 0, j = 0;
+        int k = l;
         while (i < n1 && j < n2) {
             if (L[i] <= R[j]) {
-                array[k] = L[i];
+                arr[k] = L[i];
                 i++;
             } else {
-                array[k] = R[j];
+                arr[k] = R[j];
                 j++;
             }
             k++;
-            updateChart(array, timeline, series);
+            updateChart();
         }
 
         while (i < n1) {
-            array[k] = L[i];
+            arr[k] = L[i];
             i++;
             k++;
-            updateChart(array, timeline, series);
+            updateChart();
         }
 
         while (j < n2) {
-            array[k] = R[j];
+            arr[k] = R[j];
             j++;
             k++;
-            updateChart(array, timeline, series);
+            updateChart();
         }
     }
 
-    private void updateChart(Integer[] array, Timeline timeline, XYChart.Series<String, Number> series) {
-        timeline.getKeyFrames().add(new KeyFrame(Duration.seconds(1), e -> {
-            series.getData().clear();
-            for (int i = 0; i < array.length; i++) {
-                series.getData().add(new XYChart.Data<>(String.valueOf(i), array[i]));
-            }
-        }));
+    public void updateChart() {
+        XYChart.Series<String, Number> series = new XYChart.Series<>();
+        for (int i = 0; i < array.length; i++) {
+            series.getData().add(new XYChart.Data<>(String.valueOf(i), array[i]));
+        }
+        barChart.getData().clear();
+        barChart.getData().add(series);
+
+        try {
+            Thread.sleep(10);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
     }
+
 }
